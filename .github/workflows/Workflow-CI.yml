@@ -5,42 +5,56 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
+env:
+  CSV_URL: "train_preprocessing.csv"
+  TARGET_VAR: "Charges"
+  
 jobs:
-  train-mlflow-model:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # Setup Micromamba
-      - name: Set up micromamba
-        uses: mamba-org/setup-micromamba@v1
+      - name: Set up Python 3.12.7
+        uses: actions/setup-python@v4
         with:
-          environment-file: MLproject/conda.yaml
-          cache-environment: true
+          pyhton-version: "3.12.7"
 
-      # Verify environment
-      - name: Verify environment
+      - name: Check Env
         run: |
-          micromamba run -n mlflow-env python --version
-          micromamba run -n mlflow-env mlflow --version
+          echo $CSV_URL
 
-      # Run MLflow project
-      - name: Run MLflow project
-        env:
-          MLFLOW_TRACKING_URI: file:./mlruns
+      - name: install dependencies
         run: |
-          micromamba run -n mlflow-env \
-            mlflow run MLproject \
-              -P dataset=train_preprocessing.csv \
-              -P n_iter=10 \
-              -P cv=3
+          python -m pip install --upgrade pip
+          pip install mlflow
 
-      # Upload MLflow artifacts
-      - name: Upload MLflow artifacts
-        uses: actions/upload-artifact@v4
+      - name: Run mlflow project
+        run: |
+          mlflow run Latihan-CI/MLproject --env-manager=local
+
+      - name: Get latest MLflow run_id
+        run: |
+          RUN_ID=$(ls -td mlruns/0/*/ | head -n 1 | cut -d'/' -f3)
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "Latest run_id: $RUN_ID"
+
+      - name: Build Docker Model
+        run: |
+          mlflow models build-docker --model-uri "runs:/$RUN_ID/model" --name "cc"
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
         with:
-          name: mlflow-artifacts
-          path: mlruns
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          
+      - name: Tag Docker Image
+        run: |
+          docker tag cc ${{ secrets.DOCKER_HUB_USERNAME }}/cc:latest
+
+      - name: Push Docker Image
+        run: |
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/cc:latest
