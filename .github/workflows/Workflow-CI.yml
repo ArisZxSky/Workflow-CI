@@ -14,28 +14,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Setup Micromamba
       - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: MLproject/conda.yaml
-          activate-environment: mlflow-env
           cache-environment: true
 
+      # Verify environment
       - name: Verify environment
         run: |
-          python --version
-          pip --version
-          mlflow --version
+          micromamba run -n mlflow-env python --version
+          micromamba run -n mlflow-env mlflow --version
 
+      # Run MLflow project
       - name: Run MLflow project
         env:
           MLFLOW_TRACKING_URI: file:./mlruns
         run: |
-          mlflow run . \
-            -P dataset=train_preprocessing.csv \
-            -P n_iter=10 \
-            -P cv=3
+          micromamba run -n mlflow-env \
+            mlflow run MLproject \
+              -P dataset=train_preprocessing.csv \
+              -P n_iter=10 \
+              -P cv=3
 
+      # Upload MLflow artifacts
       - name: Upload MLflow artifacts
         uses: actions/upload-artifact@v4
         with:
