@@ -22,6 +22,7 @@ jobs:
           environment-file: MLproject/conda.yaml
           python-version: 3.10
           auto-activate-base: false
+          use-mamba: true
 
       - name: Verify environment
         run: |
