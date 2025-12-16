@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Docker Model
         run: |
-          mlflow models build-docker --model-uri "runs:/$RUN_ID/model" --name "cc"
+          mlflow models build-docker --model-uri "runs:/$RUN_ID/model" --name "submission_sms"
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -53,8 +53,8 @@ jobs:
           
       - name: Tag Docker Image
         run: |
-          docker tag cc ${{ secrets.DOCKER_HUB_USERNAME }}/cc:latest
+          docker tag submission_sms ${{ secrets.DOCKER_HUB_USERNAME }}/submission_sms:latest
 
       - name: Push Docker Image
         run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/cc:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/submission_sms:latest
