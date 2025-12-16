@@ -8,6 +8,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.metrics import r2_score, root_mean_squared_error
 
+mlflow.autolog()
+
 
 def main(dataset_path, n_iter, cv):
     data = pd.read_csv(dataset_path)
