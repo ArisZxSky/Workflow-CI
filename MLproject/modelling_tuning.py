@@ -44,21 +44,20 @@ def main(dataset_path, n_iter, cv):
         random_state=42
     )
 
-    with mlflow.start_run():
-        search.fit(X_train, y_train)
+    search.fit(X_train, y_train)
 
-        best_model = search.best_estimator_
-        y_pred = best_model.predict(X_test)
+    best_model = search.best_estimator_
+    y_pred = best_model.predict(X_test)
 
-        mlflow.log_metric("r2_score", r2_score(y_test, y_pred))
-        mlflow.log_metric("rmse", root_mean_squared_error(y_test, y_pred))
+    mlflow.log_metric("r2_score", r2_score(y_test, y_pred))
+    mlflow.log_metric("rmse", root_mean_squared_error(y_test, y_pred))
 
-        mlflow.log_params(search.best_params_)
-        mlflow.sklearn.log_model(
-            best_model,
-            artifact_path="model",
-            input_example=input_example
-        )
+    mlflow.log_params(search.best_params_)
+    mlflow.sklearn.log_model(
+        best_model,
+        artifact_path="model",
+        input_example=input_example
+    )
 
 
 if __name__ == "__main__":
