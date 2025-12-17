@@ -9,8 +9,6 @@ on:
 env:
   CSV_URL: "train_preprocessing.csv"
   TARGET_VAR: "Charges"
-  MLFLOW_TRACKING_URI: file://$GITHUB_WORKSPACE/mlruns
-  MLFLOW_EXPERIMENT_NAME: ci-experiment
 
 jobs:
   build:
@@ -32,6 +30,8 @@ jobs:
 
       - name: Run MLflow project
         run: |
+          export MLFLOW_TRACKING_URI=file://$(pwd)/mlruns
+          export MLFLOW_EXPERIMENT_NAME=ci-experiment
           mlflow run MLproject --env-manager=local
 
       - name: Get latest MLflow run_id
